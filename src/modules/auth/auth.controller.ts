@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { AuthenticatedUser } from '../../types/auth';
 import {
   loginUser,
   registerSchoolAdmin,
@@ -56,4 +57,16 @@ export const loginController = async (
           : 'Login failed',
     });
   }
+};
+
+export const getMeController = (
+  req: Request,
+  res: Response
+): void => {
+  const user = req.user as AuthenticatedUser;
+
+  res.status(200).json({
+    success: true,
+    data: user,
+  });
 };

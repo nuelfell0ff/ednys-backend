@@ -38,6 +38,7 @@ app.get('/api/v1/health', (_req, res) => {
   });
 });
 
+
 app.use('/api/v1/schools', schoolRoutes);
 app.use('/api/v1/auth', authRoutes);
 
