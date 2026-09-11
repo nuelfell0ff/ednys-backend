@@ -1,3 +1,8 @@
 node_modules
 .env
 dist
+
+{
+  "email": "admin@ednysdemo.com",
+  "password": "TestPassword123!"
+}

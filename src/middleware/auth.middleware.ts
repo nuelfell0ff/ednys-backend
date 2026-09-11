@@ -1,7 +1,8 @@
 import { NextFunction, Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 
-import { UserRole } from '../modules/users/user.model';
+import { School } from '../modules/schools/school.model';
+import { User, UserRole } from '../modules/users/user.model';
 import { AuthenticatedUser } from '../types/auth';
 
 interface AccessTokenPayload {
@@ -20,11 +21,11 @@ declare global {
   }
 }
 
-export const authenticate = (
+export const authenticate = async (
   req: Request,
   res: Response,
   next: NextFunction
-): void => {
+): Promise<void> => {
   const authorization = req.headers.authorization;
 
   if (!authorization) {
@@ -86,10 +87,39 @@ export const authenticate = (
       return;
     }
 
-    req.user = {
-      userId: decoded.userId,
+    const user = await User.findOne({
+      _id: decoded.userId,
       schoolId: decoded.schoolId,
-      role: decoded.role,
+      isActive: true,
+    });
+
+    if (!user) {
+      res.status(401).json({
+        success: false,
+        message: 'User account is inactive or unavailable',
+      });
+
+      return;
+    }
+
+    const school = await School.findOne({
+      _id: decoded.schoolId,
+      isActive: true,
+    });
+
+    if (!school) {
+      res.status(401).json({
+        success: false,
+        message: 'School account is inactive or unavailable',
+      });
+
+      return;
+    }
+
+    req.user = {
+      userId: user._id.toString(),
+      schoolId: school._id.toString(),
+      role: user.role,
     };
 
     next();
