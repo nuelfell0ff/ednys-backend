@@ -1,20 +1,34 @@
+import bcrypt from 'bcryptjs';
 import { Types } from 'mongoose';
+
 import { User } from './user.model';
 import {
   CreateUserInput,
   UpdateUserInput,
 } from './user.types';
 
+export interface CreateUserData {
+  name: string;
+  email: string;
+  password: string;
+  role: CreateUserInput['role'];
+}
+
 export const createUser = async (
-  data: CreateUserInput
+  schoolId: string,
+  data: CreateUserData
 ) => {
-  if (!Types.ObjectId.isValid(data.schoolId)) {
+  if (!Types.ObjectId.isValid(schoolId)) {
     throw new Error('Invalid school ID');
   }
 
+  const email = data.email
+    .toLowerCase()
+    .trim();
+
   const existingUser = await User.findOne({
-    schoolId: data.schoolId,
-    email: data.email.toLowerCase(),
+    schoolId,
+    email,
   });
 
   if (existingUser) {
@@ -23,10 +37,17 @@ export const createUser = async (
     );
   }
 
+  const passwordHash = await bcrypt.hash(
+    data.password,
+    12
+  );
+
   const user = await User.create({
-    ...data,
-    email: data.email.toLowerCase(),
-    schoolId: new Types.ObjectId(data.schoolId),
+    name: data.name.trim(),
+    email,
+    passwordHash,
+    role: data.role,
+    schoolId: new Types.ObjectId(schoolId),
   });
 
   return user;
@@ -88,7 +109,11 @@ export const updateUser = async (
   const updateData = {
     ...data,
     ...(data.email
-      ? { email: data.email.toLowerCase() }
+      ? {
+          email: data.email
+            .toLowerCase()
+            .trim(),
+        }
       : {}),
   };
 

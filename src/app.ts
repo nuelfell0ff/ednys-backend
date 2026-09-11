@@ -9,6 +9,8 @@ import studentRoutes from './modules/students/student.routes';
 import academicSessionRoutes from './modules/academic-sessions/academic-session.routes';
 import classRoutes from './modules/classes/class.routes';
 import subjectRoutes from './modules/subjects/subject.routes';
+import teacherRoutes from './modules/teachers/teacher.routes';
+import userRoutes from './modules/users/user.routes';
 
 
 const app = express();
@@ -49,5 +51,7 @@ app.use('/api/v1/students', studentRoutes);
 app.use('/api/v1/academic-sessions', academicSessionRoutes);
 app.use('/api/v1/classes', classRoutes);
 app.use('/api/v1/subjects', subjectRoutes);
+app.use('/api/v1/teachers', teacherRoutes);
+app.use('/api/v1/users', userRoutes);
 
 export default app;
