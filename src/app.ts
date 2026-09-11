@@ -13,6 +13,7 @@ import teacherRoutes from './modules/teachers/teacher.routes';
 import userRoutes from './modules/users/user.routes';
 import teacherAssignmentRoutes from './modules/teacher-assignments/teacher-assignment.routes';
 import assignmentRoutes from './modules/assignments/assignment.routes';
+import attendanceRoutes from './modules/attendance/attendance.routes';
 
 
 const app = express();
@@ -57,5 +58,5 @@ app.use('/api/v1/teachers', teacherRoutes);
 app.use('/api/v1/users', userRoutes);
 app.use('/api/v1/teacher-assignments', teacherAssignmentRoutes);
 app.use('/api/v1/assignments', assignmentRoutes);
-
+app.use('/api/v1/attendance', attendanceRoutes);
 export default app;
