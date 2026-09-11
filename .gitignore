@@ -6,3 +6,8 @@ dist
   "email": "admin@ednysdemo.com",
   "password": "TestPassword123!"
 }
+
+{
+  "email": "sarah@ednysdemo.com",
+  "password": "Teacher@12345"
+}
