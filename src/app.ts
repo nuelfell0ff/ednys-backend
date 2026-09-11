@@ -5,6 +5,7 @@ import rateLimit from 'express-rate-limit';
 
 import schoolRoutes from './modules/schools/school.routes';
 import authRoutes from './modules/auth/auth.routes';
+import studentRoutes from './modules/students/student.routes';
 
 
 const app = express();
@@ -41,5 +42,6 @@ app.get('/api/v1/health', (_req, res) => {
 
 app.use('/api/v1/schools', schoolRoutes);
 app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/students', studentRoutes);
 
 export default app;
