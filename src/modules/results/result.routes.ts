@@ -1,0 +1,61 @@
+import { Router } from 'express';
+
+import {
+  createResultController,
+  deleteResultController,
+  getMyResultsController,
+  getResultController,
+  getResultsController,
+  publishResultController,
+  updateResultController,
+} from './result.controller';
+
+import { authenticate } from '../../middleware/auth.middleware';
+import { requireRole } from '../../middleware/role.middleware';
+import { UserRole } from '../users/user.model';
+
+const router = Router();
+
+router.use(authenticate);
+
+router.post(
+  '/',
+  requireRole(UserRole.TEACHER),
+  createResultController
+);
+
+router.get(
+  '/',
+  getResultsController
+);
+
+router.get(
+  '/my',
+  requireRole(UserRole.TEACHER),
+  getMyResultsController
+);
+
+router.get(
+  '/:id',
+  getResultController
+);
+
+router.post(
+  '/:id/publish',
+  requireRole(UserRole.ADMIN),
+  publishResultController
+);
+
+router.patch(
+  '/:id',
+  requireRole(UserRole.TEACHER),
+  updateResultController
+);
+
+router.delete(
+  '/:id',
+  requireRole(UserRole.TEACHER),
+  deleteResultController
+);
+
+export default router;
