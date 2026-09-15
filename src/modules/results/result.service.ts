@@ -2,6 +2,7 @@ import { Types } from 'mongoose';
 
 import { Result, ResultStatus } from './result.model';
 import {
+  BulkCreateResultInput,
   CreateResultInput,
   UpdateResultInput,
 } from './result.types';
@@ -308,6 +309,319 @@ export const createResult = async (
   return result;
 };
 
+export const createBulkResults = async (
+  userId: string,
+  schoolId: string,
+  data: BulkCreateResultInput
+) => {
+  validateSchoolId(schoolId);
+
+  validateObjectId(
+    data.classId,
+    'Invalid class ID'
+  );
+
+  validateObjectId(
+    data.subjectId,
+    'Invalid subject ID'
+  );
+
+  validateObjectId(
+    data.academicSessionId,
+    'Invalid academic session ID'
+  );
+
+  const teacher =
+    await getTeacherProfile(
+      userId,
+      schoolId
+    );
+
+  await validateTeacherAssignment(
+    teacher._id,
+    schoolId,
+    data.classId,
+    data.subjectId,
+    data.academicSessionId
+  );
+
+  await validateAcademicContext(
+    schoolId,
+    data.classId,
+    data.subjectId,
+    data.academicSessionId
+  );
+
+  const studentIds = data.records.map(
+    (record) => record.studentId
+  );
+
+  const duplicateStudentIds =
+    studentIds.filter(
+      (studentId, index) =>
+        studentIds.indexOf(studentId) !==
+        index
+    );
+
+  const uniqueDuplicateStudentIds = [
+    ...new Set(duplicateStudentIds),
+  ];
+
+  const results: Array<{
+    studentId: string;
+    success: boolean;
+    action?: 'created' | 'updated';
+    resultId?: string;
+    total?: number;
+    grade?: string;
+    message?: string;
+  }> = [];
+
+  for (
+    const record of data.records
+  ) {
+    try {
+      validateObjectId(
+        record.studentId,
+        'Invalid student ID'
+      );
+
+      if (
+        uniqueDuplicateStudentIds.includes(
+          record.studentId
+        )
+      ) {
+        throw new Error(
+          'Duplicate student ID in bulk request'
+        );
+      }
+
+      await validateStudent(
+        schoolId,
+        record.studentId,
+        data.classId,
+        data.academicSessionId
+      );
+
+      const existingResult =
+        await Result.findOne({
+          schoolId,
+          studentId:
+            record.studentId,
+          subjectId:
+            data.subjectId,
+          academicSessionId:
+            data.academicSessionId,
+          term: data.term,
+        });
+
+      if (existingResult) {
+        if (
+          existingResult.status ===
+          ResultStatus.PUBLISHED
+        ) {
+          throw new Error(
+            'Published results cannot be modified by a teacher'
+          );
+        }
+
+        if (
+          existingResult.teacherId.toString() !==
+          teacher._id.toString()
+        ) {
+          throw new Error(
+            'You do not have permission to modify this result'
+          );
+        }
+
+        if (
+          record.firstCA !==
+          undefined
+        ) {
+          existingResult.firstCA =
+            record.firstCA;
+        }
+
+        if (
+          record.secondCA !==
+          undefined
+        ) {
+          existingResult.secondCA =
+            record.secondCA;
+        }
+
+        if (
+          record.exam !==
+          undefined
+        ) {
+          existingResult.exam =
+            record.exam;
+        }
+
+        if (
+          hasCompleteScores(
+            existingResult.firstCA,
+            existingResult.secondCA,
+            existingResult.exam
+          )
+        ) {
+          const firstCA =
+            existingResult.firstCA!;
+
+          const secondCA =
+            existingResult.secondCA!;
+
+          const exam =
+            existingResult.exam!;
+
+          const total =
+            calculateTotal(
+              firstCA,
+              secondCA,
+              exam
+            );
+
+          existingResult.total =
+            total;
+
+          existingResult.grade =
+            calculateGrade(total);
+        } else {
+          existingResult.total =
+            undefined;
+
+          existingResult.grade =
+            undefined;
+        }
+
+        if (
+          record.remark !==
+          undefined
+        ) {
+          existingResult.remark =
+            record.remark.trim();
+        }
+
+        await existingResult.save();
+
+        results.push({
+          studentId:
+            record.studentId,
+          success: true,
+          action: 'updated',
+          resultId:
+            existingResult._id.toString(),
+          total:
+            existingResult.total,
+          grade:
+            existingResult.grade,
+        });
+
+        continue;
+      }
+
+      const complete =
+        hasCompleteScores(
+          record.firstCA,
+          record.secondCA,
+          record.exam
+        );
+
+      const total = complete
+        ? calculateTotal(
+            record.firstCA!,
+            record.secondCA!,
+            record.exam!
+          )
+        : undefined;
+
+      const grade =
+        total !== undefined
+          ? calculateGrade(total)
+          : undefined;
+
+      const result =
+        await Result.create({
+          schoolId,
+          studentId:
+            record.studentId,
+          teacherId: teacher._id,
+          classId: data.classId,
+          subjectId: data.subjectId,
+          academicSessionId:
+            data.academicSessionId,
+          term: data.term,
+          firstCA:
+            record.firstCA,
+          secondCA:
+            record.secondCA,
+          exam: record.exam,
+          total,
+          grade,
+          remark:
+            record.remark?.trim(),
+          status:
+            ResultStatus.DRAFT,
+        });
+
+      results.push({
+        studentId:
+          record.studentId,
+        success: true,
+        action: 'created',
+        resultId:
+          result._id.toString(),
+        total:
+          result.total,
+        grade:
+          result.grade,
+      });
+    } catch (error) {
+      results.push({
+        studentId:
+          record.studentId,
+        success: false,
+        message:
+          error instanceof Error
+            ? error.message
+            : 'Failed to process result',
+      });
+    }
+  }
+
+  const successful =
+    results.filter(
+      (result) => result.success
+    );
+
+  const failed =
+    results.filter(
+      (result) => !result.success
+    );
+
+  return {
+    totalRecords:
+      data.records.length,
+    successfulRecords:
+      successful.length,
+    failedRecords:
+      failed.length,
+    createdRecords:
+      successful.filter(
+        (result) =>
+          result.action ===
+          'created'
+      ).length,
+    updatedRecords:
+      successful.filter(
+        (result) =>
+          result.action ===
+          'updated'
+      ).length,
+    results,
+  };
+};
+
 export const getResults = async (
   schoolId: string
 ) => {
@@ -487,12 +801,6 @@ export const publishResult = async (
     );
   }
 
-  /*
-   * hasCompleteScores() confirms that all
-   * three values are defined. The local
-   * variables below give TypeScript explicit
-   * number values for the calculation.
-   */
   const firstCA = result.firstCA!;
   const secondCA = result.secondCA!;
   const exam = result.exam!;
@@ -590,6 +898,9 @@ export const updateResult = async (
     result.total = total;
     result.grade =
       calculateGrade(total);
+  } else {
+    result.total = undefined;
+    result.grade = undefined;
   }
 
   if (data.remark !== undefined) {

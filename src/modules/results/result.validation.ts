@@ -26,6 +26,32 @@ const scoreSchema = (
       `${fieldName} cannot exceed ${maximum}`
     );
 
+const resultScoresSchema = {
+  firstCA: scoreSchema(
+    20,
+    'First CA'
+  ).optional(),
+
+  secondCA: scoreSchema(
+    20,
+    'Second CA'
+  ).optional(),
+
+  exam: scoreSchema(
+    60,
+    'Exam'
+  ).optional(),
+};
+
+const remarkSchema = z
+  .string()
+  .trim()
+  .max(
+    100,
+    'Remark cannot exceed 100 characters'
+  )
+  .optional();
+
 export const createResultSchema =
   z
     .object({
@@ -44,29 +70,9 @@ export const createResultSchema =
         ]
       ),
 
-      firstCA: scoreSchema(
-        20,
-        'First CA'
-      ).optional(),
+      ...resultScoresSchema,
 
-      secondCA: scoreSchema(
-        20,
-        'Second CA'
-      ).optional(),
-
-      exam: scoreSchema(
-        60,
-        'Exam'
-      ).optional(),
-
-      remark: z
-        .string()
-        .trim()
-        .max(
-          100,
-          'Remark cannot exceed 100 characters'
-        )
-        .optional(),
+      remark: remarkSchema,
     })
     .refine(
       (data) =>
@@ -83,40 +89,82 @@ export const createResultSchema =
 export const updateResultSchema =
   z
     .object({
-      firstCA: scoreSchema(
-        20,
-        'First CA'
-      ).optional(),
+      ...resultScoresSchema,
 
-      secondCA: scoreSchema(
-        20,
-        'Second CA'
-      ).optional(),
-
-      exam: scoreSchema(
-        60,
-        'Exam'
-      ).optional(),
-
-      remark: z
-        .string()
-        .trim()
-        .max(
-          100,
-          'Remark cannot exceed 100 characters'
-        )
-        .optional(),
+      remark: remarkSchema,
     })
     .refine(
-      (data) => Object.keys(data).length > 0,
+      (data) =>
+        Object.keys(data).length > 0,
       {
         message:
           'At least one field is required for an update',
       }
     );
 
+export const bulkResultRecordSchema =
+  z
+    .object({
+      studentId: objectIdSchema,
+
+      ...resultScoresSchema,
+
+      remark: remarkSchema,
+    })
+    .refine(
+      (data) =>
+        data.firstCA !== undefined ||
+        data.secondCA !== undefined ||
+        data.exam !== undefined,
+      {
+        message:
+          'At least one score is required for this student',
+        path: ['firstCA'],
+      }
+    );
+
+export const bulkCreateResultSchema =
+  z.object({
+    classId: objectIdSchema,
+
+    subjectId: objectIdSchema,
+
+    academicSessionId:
+      objectIdSchema,
+
+    term: z.enum(
+      Object.values(ResultTerm) as [
+        ResultTerm,
+        ...ResultTerm[],
+      ]
+    ),
+
+    records: z
+      .array(
+        bulkResultRecordSchema
+      )
+      .min(
+        1,
+        'At least one result record is required'
+      ),
+  });
+
 export type CreateResultValidatedInput =
-  z.infer<typeof createResultSchema>;
+  z.infer<
+    typeof createResultSchema
+  >;
 
 export type UpdateResultValidatedInput =
-  z.infer<typeof updateResultSchema>;
+  z.infer<
+    typeof updateResultSchema
+  >;
+
+export type BulkResultRecordValidatedInput =
+  z.infer<
+    typeof bulkResultRecordSchema
+  >;
+
+export type BulkCreateResultValidatedInput =
+  z.infer<
+    typeof bulkCreateResultSchema
+  >;

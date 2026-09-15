@@ -1,6 +1,7 @@
 import { Router } from 'express';
 
 import {
+  createBulkResultController,
   createResultController,
   deleteResultController,
   getMyResultsController,
@@ -11,7 +12,9 @@ import {
 } from './result.controller';
 
 import { authenticate } from '../../middleware/auth.middleware';
+
 import { requireRole } from '../../middleware/role.middleware';
+
 import { UserRole } from '../users/user.model';
 
 const router = Router();
@@ -22,6 +25,12 @@ router.post(
   '/',
   requireRole(UserRole.TEACHER),
   createResultController
+);
+
+router.post(
+  '/bulk',
+  requireRole(UserRole.TEACHER),
+  createBulkResultController
 );
 
 router.get(

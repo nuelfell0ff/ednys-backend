@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 
 import {
+  createBulkResults,
   createResult,
   deleteResult,
   getMyResults,
@@ -11,6 +12,7 @@ import {
 } from './result.service';
 
 import {
+  bulkCreateResultSchema,
   createResultSchema,
   updateResultSchema,
 } from './result.validation';
@@ -94,6 +96,72 @@ export const createResultController =
           error instanceof Error
             ? error.message
             : 'Failed to create result',
+      });
+    }
+  };
+
+export const createBulkResultController =
+  async (
+    req: Request,
+    res: Response
+  ): Promise<void> => {
+    const schoolId = getSchoolId(req);
+    const userId = getUserId(req);
+
+    if (!schoolId || !userId) {
+      res.status(401).json({
+        success: false,
+        message:
+          'Authentication required',
+      });
+
+      return;
+    }
+
+    const validationResult =
+      bulkCreateResultSchema.safeParse(
+        req.body
+      );
+
+    if (!validationResult.success) {
+      res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors:
+          validationResult.error.flatten(),
+      });
+
+      return;
+    }
+
+    try {
+      const result =
+        await createBulkResults(
+          userId,
+          schoolId,
+          validationResult.data
+        );
+
+      const hasFailures =
+        result.failedRecords > 0;
+
+      res.status(
+        hasFailures ? 207 : 201
+      ).json({
+        success:
+          result.failedRecords === 0,
+        message: hasFailures
+          ? 'Bulk result processing completed with some errors'
+          : 'Bulk results processed successfully',
+        data: result,
+      });
+    } catch (error) {
+      res.status(400).json({
+        success: false,
+        message:
+          error instanceof Error
+            ? error.message
+            : 'Failed to process bulk results',
       });
     }
   };

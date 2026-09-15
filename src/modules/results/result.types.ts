@@ -20,3 +20,19 @@ export interface UpdateResultInput {
   exam?: number;
   remark?: string;
 }
+
+export interface BulkResultRecordInput {
+  studentId: string;
+  firstCA?: number;
+  secondCA?: number;
+  exam?: number;
+  remark?: string;
+}
+
+export interface BulkCreateResultInput {
+  classId: string;
+  subjectId: string;
+  academicSessionId: string;
+  term: ResultTerm;
+  records: BulkResultRecordInput[];
+}
