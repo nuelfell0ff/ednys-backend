@@ -16,6 +16,7 @@ import assignmentRoutes from './modules/assignments/assignment.routes';
 import attendanceRoutes from './modules/attendance/attendance.routes';
 import resultRoutes from './modules/results/result.routes';
 import parentRoutes from './modules/parents/parent.routes';
+import parentStudentRoutes from './modules/ParentStudent/parentstudent.routes';
 
 
 const app = express();
@@ -63,4 +64,5 @@ app.use('/api/v1/assignments', assignmentRoutes);
 app.use('/api/v1/attendance', attendanceRoutes);
 app.use('/api/v1/results', resultRoutes);
 app.use('/api/v1/parents', parentRoutes);
+app.use('/api/v1/parent-students', parentStudentRoutes);
 export default app;
