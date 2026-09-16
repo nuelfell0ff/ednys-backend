@@ -3,6 +3,7 @@ import mongoose, { Document, Schema } from 'mongoose';
 export interface ISchool extends Document {
   name: string;
   slug: string;
+  subdomain: string;
   email?: string;
   phone?: string;
   address?: string;
@@ -30,6 +31,15 @@ const schoolSchema = new Schema<ISchool>(
       lowercase: true,
       trim: true,
       maxlength: 100,
+    },
+
+    subdomain: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      trim: true,
+      maxlength: 63,
     },
 
     email: {

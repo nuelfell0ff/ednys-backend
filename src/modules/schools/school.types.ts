@@ -1,6 +1,7 @@
 export interface CreateSchoolInput {
   name: string;
   slug: string;
+  subdomain: string;
   email?: string;
   phone?: string;
   address?: string;

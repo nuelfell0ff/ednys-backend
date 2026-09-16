@@ -7,12 +7,20 @@ import {
 export const createSchool = async (
   data: CreateSchoolInput
 ) => {
-  const existingSchool = await School.findOne({
+  const existingSchoolBySlug = await School.findOne({
     slug: data.slug,
   });
 
-  if (existingSchool) {
+  if (existingSchoolBySlug) {
     throw new Error('A school with this slug already exists');
+  }
+
+  const existingSchoolBySubdomain = await School.findOne({
+    subdomain: data.subdomain,
+  });
+
+  if (existingSchoolBySubdomain) {
+    throw new Error('A school with this subdomain already exists');
   }
 
   const school = await School.create(data);
