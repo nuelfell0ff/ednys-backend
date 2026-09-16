@@ -3,6 +3,7 @@ import { Request, Response } from 'express';
 import {
   createStudent,
   deleteStudent,
+  getMyChildrenStudents,
   getStudentById,
   getStudents,
   updateStudent,
@@ -21,6 +22,16 @@ const getSchoolId = (
   }
 
   return req.user.schoolId;
+};
+
+const getUserId = (
+  req: Request
+): string | null => {
+  if (!req.user?.userId) {
+    return null;
+  }
+
+  return req.user.userId;
 };
 
 const getStudentId = (
@@ -117,6 +128,45 @@ export const getStudentsController = async (
     });
   }
 };
+
+export const getMyChildrenStudentsController =
+  async (
+    req: Request,
+    res: Response
+  ): Promise<void> => {
+    const schoolId = getSchoolId(req);
+    const userId = getUserId(req);
+
+    if (!schoolId || !userId) {
+      res.status(401).json({
+        success: false,
+        message: 'Authentication required',
+      });
+
+      return;
+    }
+
+    try {
+      const students =
+        await getMyChildrenStudents(
+          userId,
+          schoolId
+        );
+
+      res.status(200).json({
+        success: true,
+        data: students,
+      });
+    } catch (error) {
+      res.status(400).json({
+        success: false,
+        message:
+          error instanceof Error
+            ? error.message
+            : 'Failed to retrieve your children',
+      });
+    }
+  };
 
 export const getStudentController = async (
   req: Request,

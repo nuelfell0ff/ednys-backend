@@ -10,6 +10,9 @@ import {
   UpdateStudentInput,
 } from './student.types';
 
+import { Parent } from '../parents/parent.model';
+import { ParentStudent } from '../ParentStudent/parentstudent.model';
+
 const convertGender = (
   gender?: 'MALE' | 'FEMALE'
 ): StudentGender | undefined => {
@@ -94,6 +97,59 @@ export const getStudents = async (
   return students;
 };
 
+export const getMyChildrenStudents = async (
+  userId: string,
+  schoolId: string
+) => {
+  if (!Types.ObjectId.isValid(userId)) {
+    throw new Error('Invalid user ID');
+  }
+
+  if (!Types.ObjectId.isValid(schoolId)) {
+    throw new Error('Invalid school ID');
+  }
+
+  const parent = await Parent.findOne({
+    userId,
+    schoolId,
+    isActive: true,
+  });
+
+  if (!parent) {
+    throw new Error(
+      'Active parent profile not found for this user'
+    );
+  }
+
+  const relationships =
+    await ParentStudent.find({
+      schoolId,
+      parentId: parent._id,
+      isActive: true,
+    }).select('studentId');
+
+  const studentIds = relationships.map(
+    (relationship) => relationship.studentId
+  );
+
+  if (studentIds.length === 0) {
+    return [];
+  }
+
+  const students = await Student.find({
+    _id: { $in: studentIds },
+    schoolId,
+    isActive: true,
+  })
+    .select(
+      'admissionNumber firstName middleName lastName dateOfBirth gender classId academicSessionId isActive'
+    )
+    .sort({
+      createdAt: -1,
+    });
+
+  return students;
+};
 
 export const getStudentById = async (
   studentId: string,

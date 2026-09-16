@@ -172,6 +172,37 @@ export const getParentByUserId = async (
   return parent;
 };
 
+export const getMyParentProfile = async (
+  schoolId: string,
+  userId: string
+) => {
+  validateSchoolId(schoolId);
+
+  validateObjectId(
+    userId,
+    'Invalid user ID'
+  );
+
+  const parent =
+    await Parent.findOne({
+      schoolId,
+      userId,
+      isActive: true,
+    }).populate({
+      path: 'userId',
+      select:
+        'name email role isActive',
+    });
+
+  if (!parent) {
+    throw new Error(
+      'Active parent profile not found for this user'
+    );
+  }
+
+  return parent;
+};
+
 export const updateParent = async (
   schoolId: string,
   parentId: string,

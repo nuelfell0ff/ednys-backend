@@ -3,6 +3,7 @@ import { Router } from 'express';
 import {
   createStudentController,
   deleteStudentController,
+  getMyChildrenStudentsController,
   getStudentController,
   getStudentsController,
   updateStudentController,
@@ -23,12 +24,20 @@ router.post(
 );
 
 router.get(
+  '/my/children',
+  requireRole(UserRole.PARENT),
+  getMyChildrenStudentsController
+);
+
+router.get(
   '/',
+  requireRole(UserRole.ADMIN, UserRole.TEACHER),
   getStudentsController
 );
 
 router.get(
   '/:id',
+  requireRole(UserRole.ADMIN, UserRole.TEACHER),
   getStudentController
 );
 

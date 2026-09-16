@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 
 import {
   createParent,
+  getMyParentProfile,
   getParentById,
   getParentByUserId,
   getParents,
@@ -17,6 +18,12 @@ const getSchoolId = (
   req: Request
 ): string | undefined => {
   return req.user?.schoolId;
+};
+
+const getUserId = (
+  req: Request
+): string | undefined => {
+  return req.user?.userId;
 };
 
 const getParentId = (
@@ -122,6 +129,46 @@ export const getParentsController =
           error instanceof Error
             ? error.message
             : 'Failed to retrieve parents',
+      });
+    }
+  };
+
+export const getMyParentProfileController =
+  async (
+    req: Request,
+    res: Response
+  ): Promise<void> => {
+    const schoolId = getSchoolId(req);
+    const userId = getUserId(req);
+
+    if (!schoolId || !userId) {
+      res.status(401).json({
+        success: false,
+        message:
+          'Authentication required',
+      });
+
+      return;
+    }
+
+    try {
+      const parent =
+        await getMyParentProfile(
+          schoolId,
+          userId
+        );
+
+      res.status(200).json({
+        success: true,
+        data: parent,
+      });
+    } catch (error) {
+      res.status(400).json({
+        success: false,
+        message:
+          error instanceof Error
+            ? error.message
+            : 'Failed to retrieve your parent profile',
       });
     }
   };
