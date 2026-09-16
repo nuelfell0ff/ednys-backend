@@ -13,6 +13,8 @@ import { TeacherAssignment } from '../teacher-assignments/teacher-assignment.mod
 import { Class } from '../classes/class.model';
 import { Subject } from '../subjects/subject.model';
 import { AcademicSession } from '../academic-sessions/academic-session.model';
+import { Parent } from '../parents/parent.model';
+import { ParentStudent } from '../ParentStudent/parentstudent.model';
 
 const validateObjectId = (
   value: string,
@@ -704,6 +706,94 @@ export const getMyResults = async (
 
   return results;
 };
+
+/*
+ * Parent result access
+ *
+ * The authenticated user's userId is used to
+ * resolve the Parent profile. The parent can
+ * only access results belonging to students
+ * linked to that Parent profile.
+ *
+ * Only PUBLISHED results are returned.
+ */
+export const getMyChildrenResults =
+  async (
+    userId: string,
+    schoolId: string
+  ) => {
+    validateSchoolId(schoolId);
+
+    validateObjectId(
+      userId,
+      'Invalid user ID'
+    );
+
+    const parent =
+      await Parent.findOne({
+        userId,
+        schoolId,
+        isActive: true,
+      });
+
+    if (!parent) {
+      throw new Error(
+        'Active parent profile not found for this user'
+      );
+    }
+
+    const relationships =
+      await ParentStudent.find({
+        schoolId,
+        parentId: parent._id,
+        isActive: true,
+      }).select('studentId');
+
+    const studentIds =
+      relationships.map(
+        (relationship) =>
+          relationship.studentId
+      );
+
+    if (studentIds.length === 0) {
+      return [];
+    }
+
+    const results =
+      await Result.find({
+        schoolId,
+        studentId: {
+          $in: studentIds,
+        },
+        status:
+          ResultStatus.PUBLISHED,
+      })
+        .populate({
+          path: 'studentId',
+          select:
+            'firstName middleName lastName admissionNumber gender',
+        })
+        .populate({
+          path: 'classId',
+          select:
+            'name code level capacity isActive',
+        })
+        .populate({
+          path: 'subjectId',
+          select:
+            'name isActive',
+        })
+        .populate({
+          path: 'academicSessionId',
+          select:
+            'name startDate endDate isActive',
+        })
+        .sort({
+          createdAt: -1,
+        });
+
+    return results;
+  };
 
 export const getResultById = async (
   schoolId: string,

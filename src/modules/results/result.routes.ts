@@ -4,6 +4,7 @@ import {
   createBulkResultController,
   createResultController,
   deleteResultController,
+  getMyChildrenResultsController,
   getMyResultsController,
   getResultController,
   getResultsController,
@@ -34,7 +35,14 @@ router.post(
 );
 
 router.get(
+  '/my/children',
+  requireRole(UserRole.PARENT),
+  getMyChildrenResultsController
+);
+
+router.get(
   '/',
+  requireRole(UserRole.ADMIN, UserRole.TEACHER),
   getResultsController
 );
 
@@ -46,6 +54,7 @@ router.get(
 
 router.get(
   '/:id',
+  requireRole(UserRole.ADMIN, UserRole.TEACHER),
   getResultController
 );
 

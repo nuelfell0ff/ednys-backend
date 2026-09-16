@@ -4,6 +4,7 @@ import {
   createBulkResults,
   createResult,
   deleteResult,
+  getMyChildrenResults,
   getMyResults,
   getResultById,
   getResults,
@@ -240,6 +241,46 @@ export const getMyResultsController =
           error instanceof Error
             ? error.message
             : 'Failed to retrieve your results',
+      });
+    }
+  };
+
+export const getMyChildrenResultsController =
+  async (
+    req: Request,
+    res: Response
+  ): Promise<void> => {
+    const schoolId = getSchoolId(req);
+    const userId = getUserId(req);
+
+    if (!schoolId || !userId) {
+      res.status(401).json({
+        success: false,
+        message:
+          'Authentication required',
+      });
+
+      return;
+    }
+
+    try {
+      const results =
+        await getMyChildrenResults(
+          userId,
+          schoolId
+        );
+
+      res.status(200).json({
+        success: true,
+        data: results,
+      });
+    } catch (error) {
+      res.status(400).json({
+        success: false,
+        message:
+          error instanceof Error
+            ? error.message
+            : 'Failed to retrieve your children\'s results',
       });
     }
   };
