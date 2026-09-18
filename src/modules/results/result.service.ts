@@ -795,6 +795,95 @@ export const getMyChildrenResults =
     return results;
   };
 
+/*
+ * Parent result access for a specific child
+ *
+ * The authenticated user's userId is used to
+ * resolve the Parent profile. The requested
+ * student must be actively linked to that
+ * Parent profile in the same school.
+ *
+ * Only PUBLISHED results are returned.
+ */
+export const getChildResultsForParent =
+  async (
+    schoolId: string,
+    userId: string,
+    studentId: string
+  ) => {
+    validateSchoolId(schoolId);
+
+    validateObjectId(
+      userId,
+      'Invalid user ID'
+    );
+
+    validateObjectId(
+      studentId,
+      'Invalid student ID'
+    );
+
+    const parent =
+      await Parent.findOne({
+        schoolId,
+        userId,
+        isActive: true,
+      });
+
+    if (!parent) {
+      throw new Error(
+        'Active parent profile not found for this user'
+      );
+    }
+
+    const relationship =
+      await ParentStudent.findOne({
+        schoolId,
+        parentId: parent._id,
+        studentId,
+        isActive: true,
+      });
+
+    if (!relationship) {
+      throw new Error(
+        'You do not have access to this student'
+      );
+    }
+
+    const results =
+      await Result.find({
+        schoolId,
+        studentId,
+        status:
+          ResultStatus.PUBLISHED,
+      })
+        .populate({
+          path: 'studentId',
+          select:
+            'firstName middleName lastName admissionNumber gender',
+        })
+        .populate({
+          path: 'classId',
+          select:
+            'name code level capacity isActive',
+        })
+        .populate({
+          path: 'subjectId',
+          select:
+            'name isActive',
+        })
+        .populate({
+          path: 'academicSessionId',
+          select:
+            'name startDate endDate isActive',
+        })
+        .sort({
+          createdAt: -1,
+        });
+
+    return results;
+  };
+
 export const getResultById = async (
   schoolId: string,
   resultId: string
@@ -830,7 +919,8 @@ export const getResultById = async (
       })
       .populate({
         path: 'subjectId',
-        select: 'name isActive',
+        select:
+          'name isActive',
       })
       .populate({
         path: 'academicSessionId',

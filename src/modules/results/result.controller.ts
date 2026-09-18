@@ -4,6 +4,7 @@ import {
   createBulkResults,
   createResult,
   deleteResult,
+  getChildResultsForParent,
   getMyChildrenResults,
   getMyResults,
   getResultById,
@@ -17,6 +18,8 @@ import {
   createResultSchema,
   updateResultSchema,
 } from './result.validation';
+
+import { ResultTerm } from './result.model';
 
 const getSchoolId = (
   req: Request
@@ -40,6 +43,60 @@ const getResultId = (
   }
 
   return resultId;
+};
+
+const getStudentId = (
+  req: Request
+): string | undefined => {
+  const studentId = req.params.studentId;
+
+  if (typeof studentId !== 'string') {
+    return undefined;
+  }
+
+  return studentId;
+};
+
+const getAcademicSessionId = (
+  req: Request
+): string | undefined => {
+  const academicSessionId =
+    req.query.academicSessionId;
+
+  if (
+    typeof academicSessionId !==
+    'string'
+  ) {
+    return undefined;
+  }
+
+  return academicSessionId;
+};
+
+const getTerm = (
+  req: Request
+): ResultTerm | undefined => {
+  const term = req.query.term;
+
+  if (typeof term !== 'string') {
+    return undefined;
+  }
+
+  if (
+    !Object.values(ResultTerm).includes(
+      term as ResultTerm
+    )
+  ) {
+    return undefined;
+  }
+
+  return term as ResultTerm;
+};
+
+const isValidObjectId = (
+  value: string
+): boolean => {
+  return /^[a-fA-F0-9]{24}$/.test(value);
 };
 
 export const createResultController =
@@ -281,6 +338,91 @@ export const getMyChildrenResultsController =
           error instanceof Error
             ? error.message
             : 'Failed to retrieve your children\'s results',
+      });
+    }
+  };
+
+export const getChildResultsForParentController =
+  async (
+    req: Request,
+    res: Response
+  ): Promise<void> => {
+    const schoolId = getSchoolId(req);
+    const userId = getUserId(req);
+    const studentId = getStudentId(req);
+    const academicSessionId =
+      getAcademicSessionId(req);
+    const term = getTerm(req);
+
+    if (!schoolId || !userId) {
+      res.status(401).json({
+        success: false,
+        message:
+          'Authentication required',
+      });
+
+      return;
+    }
+
+    if (!studentId) {
+      res.status(400).json({
+        success: false,
+        message:
+          'Student ID is required',
+      });
+
+      return;
+    }
+
+    if (
+      academicSessionId &&
+      !isValidObjectId(
+        academicSessionId
+      )
+    ) {
+      res.status(400).json({
+        success: false,
+        message:
+          'Invalid academic session ID',
+      });
+
+      return;
+    }
+
+    if (
+      req.query.term !== undefined &&
+      !term
+    ) {
+      res.status(400).json({
+        success: false,
+        message:
+          'Invalid term',
+      });
+
+      return;
+    }
+
+    try {
+      const results =
+        await getChildResultsForParent(
+          schoolId,
+          userId,
+          studentId,
+          academicSessionId,
+          term
+        );
+
+      res.status(200).json({
+        success: true,
+        data: results,
+      });
+    } catch (error) {
+      res.status(400).json({
+        success: false,
+        message:
+          error instanceof Error
+            ? error.message
+            : 'Failed to retrieve child results',
       });
     }
   };

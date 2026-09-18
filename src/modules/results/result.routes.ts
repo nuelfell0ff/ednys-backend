@@ -4,6 +4,7 @@ import {
   createBulkResultController,
   createResultController,
   deleteResultController,
+  getChildResultsForParentController,
   getMyChildrenResultsController,
   getMyResultsController,
   getResultController,
@@ -38,6 +39,12 @@ router.get(
   '/my/children',
   requireRole(UserRole.PARENT),
   getMyChildrenResultsController
+);
+
+router.get(
+  '/my/children/:studentId',
+  requireRole(UserRole.PARENT),
+  getChildResultsForParentController
 );
 
 router.get(
