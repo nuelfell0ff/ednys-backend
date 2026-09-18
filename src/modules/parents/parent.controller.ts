@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 
 import {
   createParent,
+  getMyParentDashboard,
   getMyParentProfile,
   getParentById,
   getParentByUserId,
@@ -169,6 +170,46 @@ export const getMyParentProfileController =
           error instanceof Error
             ? error.message
             : 'Failed to retrieve your parent profile',
+      });
+    }
+  };
+
+export const getMyParentDashboardController =
+  async (
+    req: Request,
+    res: Response
+  ): Promise<void> => {
+    const schoolId = getSchoolId(req);
+    const userId = getUserId(req);
+
+    if (!schoolId || !userId) {
+      res.status(401).json({
+        success: false,
+        message:
+          'Authentication required',
+      });
+
+      return;
+    }
+
+    try {
+      const dashboard =
+        await getMyParentDashboard(
+          schoolId,
+          userId
+        );
+
+      res.status(200).json({
+        success: true,
+        data: dashboard,
+      });
+    } catch (error) {
+      res.status(400).json({
+        success: false,
+        message:
+          error instanceof Error
+            ? error.message
+            : 'Failed to retrieve your parent dashboard',
       });
     }
   };

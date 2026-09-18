@@ -2,6 +2,7 @@ import { Router } from 'express';
 
 import {
   createParentController,
+  getMyParentDashboardController,
   getMyParentProfileController,
   getParentByUserController,
   getParentController,
@@ -27,6 +28,12 @@ router.get(
   '/my',
   requireRole(UserRole.PARENT),
   getMyParentProfileController
+);
+
+router.get(
+  '/dashboard',
+  requireRole(UserRole.PARENT),
+  getMyParentDashboardController
 );
 
 router.get(

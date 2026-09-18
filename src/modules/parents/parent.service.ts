@@ -11,6 +11,15 @@ import {
   UserRole,
 } from '../users/user.model';
 
+import { ParentStudent } from '../ParentStudent/parentstudent.model';
+
+import { Student } from '../students/student.model';
+
+import {
+  Result,
+  ResultStatus,
+} from '../results/result.model';
+
 const validateObjectId = (
   value: string,
   message: string
@@ -201,6 +210,116 @@ export const getMyParentProfile = async (
   }
 
   return parent;
+};
+
+export const getMyParentDashboard = async (
+  schoolId: string,
+  userId: string
+) => {
+  validateSchoolId(schoolId);
+
+  validateObjectId(
+    userId,
+    'Invalid user ID'
+  );
+
+  const parent =
+    await Parent.findOne({
+      schoolId,
+      userId,
+      isActive: true,
+    }).populate({
+      path: 'userId',
+      select:
+        'name email role isActive',
+    });
+
+  if (!parent) {
+    throw new Error(
+      'Active parent profile not found for this user'
+    );
+  }
+
+  const relationships =
+    await ParentStudent.find({
+      schoolId,
+      parentId: parent._id,
+      isActive: true,
+    }).select('studentId relationship');
+
+  const studentIds =
+    relationships.map(
+      (relationship) =>
+        relationship.studentId
+    );
+
+  let children: any[] = [];
+  let results: any[] = [];
+
+  if (studentIds.length > 0) {
+    children =
+      await Student.find({
+        _id: {
+          $in: studentIds,
+        },
+        schoolId,
+        isActive: true,
+      })
+        .select(
+          'admissionNumber firstName middleName lastName dateOfBirth gender classId academicSessionId isActive'
+        )
+        .populate({
+          path: 'classId',
+          select:
+            'name code level capacity isActive',
+        })
+        .populate({
+          path: 'academicSessionId',
+          select:
+            'name startDate endDate isActive',
+        })
+        .sort({
+          createdAt: -1,
+        });
+
+    results =
+      await Result.find({
+        schoolId,
+        studentId: {
+          $in: studentIds,
+        },
+        status: ResultStatus.PUBLISHED,
+      })
+        .populate({
+          path: 'studentId',
+          select:
+            'firstName middleName lastName admissionNumber gender',
+        })
+        .populate({
+          path: 'classId',
+          select:
+            'name code level capacity isActive',
+        })
+        .populate({
+          path: 'subjectId',
+          select:
+            'name isActive',
+        })
+        .populate({
+          path: 'academicSessionId',
+          select:
+            'name startDate endDate isActive',
+        })
+        .sort({
+          createdAt: -1,
+        });
+  }
+
+  return {
+    profile: parent,
+    children,
+    results,
+  };
 };
 
 export const updateParent = async (
