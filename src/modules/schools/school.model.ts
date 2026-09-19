@@ -1,4 +1,7 @@
-import mongoose, { Document, Schema } from 'mongoose';
+import mongoose, {
+  Document,
+  Schema,
+} from 'mongoose';
 
 export interface ISchool extends Document {
   name: string;
@@ -15,74 +18,84 @@ export interface ISchool extends Document {
   updatedAt: Date;
 }
 
-const schoolSchema = new Schema<ISchool>(
-  {
-    name: {
-      type: String,
-      required: true,
-      trim: true,
-      maxlength: 150,
-    },
+const schoolSchema =
+  new Schema<ISchool>(
+    {
+      name: {
+        type: String,
+        required: true,
+        trim: true,
+        maxlength: 150,
+      },
 
-    slug: {
-      type: String,
-      required: true,
-      unique: true,
-      lowercase: true,
-      trim: true,
-      maxlength: 100,
-    },
+      slug: {
+        type: String,
+        required: true,
+        unique: true,
+        lowercase: true,
+        trim: true,
+        maxlength: 100,
+      },
 
-    subdomain: {
-      type: String,
-      required: true,
-      unique: true,
-      lowercase: true,
-      trim: true,
-      maxlength: 63,
-    },
+      subdomain: {
+        type: String,
+        required: true,
+        unique: true,
+        lowercase: true,
+        trim: true,
+        minlength: 1,
+        maxlength: 63,
+        match: [
+          /^(?!-)[a-z0-9-]+(?<!-)$/,
+          'Subdomain can only contain lowercase letters, numbers, and hyphens, and cannot start or end with a hyphen',
+        ],
+      },
 
-    email: {
-      type: String,
-      lowercase: true,
-      trim: true,
-    },
+      email: {
+        type: String,
+        lowercase: true,
+        trim: true,
+      },
 
-    phone: {
-      type: String,
-      trim: true,
-    },
+      phone: {
+        type: String,
+        trim: true,
+      },
 
-    address: {
-      type: String,
-      trim: true,
-    },
+      address: {
+        type: String,
+        trim: true,
+      },
 
-    city: {
-      type: String,
-      trim: true,
-    },
+      city: {
+        type: String,
+        trim: true,
+      },
 
-    state: {
-      type: String,
-      trim: true,
-    },
+      state: {
+        type: String,
+        trim: true,
+      },
 
-    country: {
-      type: String,
-      required: true,
-      default: 'Nigeria',
-      trim: true,
-    },
+      country: {
+        type: String,
+        required: true,
+        default: 'Nigeria',
+        trim: true,
+      },
 
-    isActive: {
-      type: Boolean,
-      default: true,
+      isActive: {
+        type: Boolean,
+        default: true,
+      },
     },
-  },
-  {
-    timestamps: true,
-  }
-);
+    {
+      timestamps: true,
+    }
+  );
 
-export const School = mongoose.model<ISchool>('School', schoolSchema);
+export const School =
+  mongoose.model<ISchool>(
+    'School',
+    schoolSchema
+  );
