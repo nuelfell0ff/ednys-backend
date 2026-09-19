@@ -1,20 +1,5 @@
 node_modules
 .env
 dist
-
-{
-  "email": "admin@ednysdemo.com",
-  "password": "TestPassword123!"
-}
-
-{
-  "email": "sarah@ednysdemo.com",
-  "password": "Teacher@12345"
-}
-
-{
-"email": "david@ednysdemo.com",
-"password": "Parent@12345"
-}
-
+text.md
 teachers should be able to upload bulk results and maybe upload for example, firstCA for all or part of the students (in bulk or singular), then update it to add the secondCA and the exam too... do you get what i am saying?
