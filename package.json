@@ -9,13 +9,18 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "create-super-admin": "ts-node src/scripts/create-super-admin.ts",
-    "cleanup-school-payment-config": "ts-node src/scripts/cleanup-school-payment-config.ts"
+    "cleanup-school-payment-config": "ts-node src/scripts/cleanup-school-payment-config.ts",
+    "test-paystack": "ts-node src/scripts/test-paystack-connection.ts",
+    "test-paystack-banks": "ts-node src/scripts/test-paystack-banks.ts",
+    "test-paystack-account": "ts-node src/scripts/test-paystack-account.ts",
+    "test-paystack-subaccount": "ts-node src/scripts/test-paystack-subaccount.ts"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "axios": "^1.20.0",
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",

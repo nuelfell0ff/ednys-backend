@@ -4,10 +4,12 @@ import {
   createPayment,
   getPaymentById,
   getPayments,
+  initializePaystackPayment,
 } from './payment.service';
 
 import {
   createPaymentSchema,
+  initializePaystackPaymentSchema,
   paymentQuerySchema,
 } from './payment.validation';
 
@@ -19,6 +21,16 @@ const getSchoolId = (
   }
 
   return req.user.schoolId;
+};
+
+const getUserId = (
+  req: Request
+): string | null => {
+  if (!req.user?.userId) {
+    return null;
+  }
+
+  return req.user.userId;
 };
 
 const getPaymentId = (
@@ -88,6 +100,64 @@ export const createPaymentController =
           error instanceof Error
             ? error.message
             : 'Failed to create payment',
+      });
+    }
+  };
+
+export const initializePaystackPaymentController =
+  async (
+    req: Request,
+    res: Response
+  ): Promise<void> => {
+    const schoolId = getSchoolId(req);
+    const userId = getUserId(req);
+
+    if (!schoolId || !userId) {
+      res.status(401).json({
+        success: false,
+        message: 'Authentication required',
+      });
+
+      return;
+    }
+
+    const validationResult =
+      initializePaystackPaymentSchema.safeParse(
+        req.body
+      );
+
+    if (!validationResult.success) {
+      res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors:
+          validationResult.error.flatten(),
+      });
+
+      return;
+    }
+
+    try {
+      const payment =
+        await initializePaystackPayment(
+          schoolId,
+          userId,
+          validationResult.data
+        );
+
+      res.status(200).json({
+        success: true,
+        message:
+          'Paystack payment initialized successfully',
+        data: payment,
+      });
+    } catch (error) {
+      res.status(400).json({
+        success: false,
+        message:
+          error instanceof Error
+            ? error.message
+            : 'Failed to initialize Paystack payment',
       });
     }
   };

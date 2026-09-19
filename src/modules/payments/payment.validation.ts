@@ -40,6 +40,16 @@ export const createPaymentSchema =
       .optional(),
   });
 
+export const initializePaystackPaymentSchema =
+  z.object({
+    invoiceId: objectIdSchema,
+    amount: z
+      .number()
+      .positive(
+        'Payment amount must be greater than zero'
+      ),
+  });
+
 export const paymentQuerySchema =
   z.object({
     invoiceId:
@@ -66,6 +76,11 @@ export const paymentQuerySchema =
 
 export type CreatePaymentValidatedInput =
   z.infer<typeof createPaymentSchema>;
+
+export type InitializePaystackPaymentValidatedInput =
+  z.infer<
+    typeof initializePaystackPaymentSchema
+  >;
 
 export type PaymentQueryValidatedInput =
   z.infer<typeof paymentQuerySchema>;

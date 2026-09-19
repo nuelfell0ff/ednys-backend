@@ -1,5 +1,14 @@
 import { Types } from 'mongoose';
 
+import { School } from '../schools/school.model';
+import {
+  PlatformPaymentConfig,
+} from '../platform-payment-config/platform-payment-config.model';
+
+import {
+  createPaystackSubaccount,
+} from '../../services/paystack-subaccount.service';
+
 import {
   SchoolPaymentConfig,
 } from './school-payment-config.model';
@@ -25,14 +34,6 @@ const validatePaystackConfiguration = (
     settlementAccountNumber?: string;
   }
 ): void => {
-  if (
-    !data.paystackSubaccountCode
-  ) {
-    throw new Error(
-      'Paystack subaccount code is required'
-    );
-  }
-
   if (!data.settlementBankCode) {
     throw new Error(
       'Settlement bank code is required'
@@ -53,6 +54,78 @@ const validatePaystackConfiguration = (
     );
   }
 };
+
+const createSchoolPaystackSubaccount =
+  async (
+    schoolId: string,
+    data: {
+      settlementBankCode: string;
+      settlementAccountNumber: string;
+    }
+  ) => {
+    const school =
+      await School.findOne({
+        _id: schoolId,
+        isActive: true,
+      });
+
+    if (!school) {
+      throw new Error(
+        'School not found or inactive'
+      );
+    }
+
+    const platformConfig =
+      await PlatformPaymentConfig.findOne();
+
+    if (!platformConfig) {
+      throw new Error(
+        'Platform payment configuration not found'
+      );
+    }
+
+    if (!platformConfig.isEnabled) {
+      throw new Error(
+        'Platform payment configuration is disabled'
+      );
+    }
+
+    if (
+      platformConfig.platformFeePercentage < 0 ||
+      platformConfig.platformFeePercentage > 100
+    ) {
+      throw new Error(
+        'Invalid platform fee percentage'
+      );
+    }
+
+    const result =
+      await createPaystackSubaccount({
+        businessName: school.name,
+        bankCode:
+          data.settlementBankCode,
+        accountNumber:
+          data.settlementAccountNumber,
+        percentageCharge:
+          platformConfig.platformFeePercentage,
+        description:
+          `EDNYS payment account for ${school.name}`,
+        primaryContactEmail:
+          school.email,
+      });
+
+    if (
+      !result.status ||
+      !result.data?.subaccount_code
+    ) {
+      throw new Error(
+        result.message ||
+          'Failed to create Paystack subaccount'
+      );
+    }
+
+    return result.data;
+  };
 
 export const createSchoolPaymentConfig =
   async (
@@ -76,6 +149,28 @@ export const createSchoolPaymentConfig =
       validatePaystackConfiguration(
         data
       );
+
+      const subaccount =
+        await createSchoolPaystackSubaccount(
+          schoolId,
+          {
+            settlementBankCode:
+              data.settlementBankCode!,
+            settlementAccountNumber:
+              data.settlementAccountNumber!,
+          }
+        );
+
+      data.paystackSubaccountCode =
+        subaccount.subaccount_code;
+
+      data.paystackAccountName =
+        subaccount.account_name;
+
+      if (!data.settlementBankName) {
+        data.settlementBankName =
+          subaccount.settlement_bank;
+      }
     }
 
     const config =
@@ -139,11 +234,9 @@ export const updateSchoolPaymentConfig =
 
     const updatedData = {
       paystackSubaccountCode:
-        data.paystackSubaccountCode ??
         existingConfig.paystackSubaccountCode,
 
       paystackAccountName:
-        data.paystackAccountName ??
         existingConfig.paystackAccountName,
 
       settlementBankCode:
@@ -167,6 +260,34 @@ export const updateSchoolPaymentConfig =
       validatePaystackConfiguration(
         updatedData
       );
+
+      if (
+        !updatedData.paystackSubaccountCode
+      ) {
+        const subaccount =
+          await createSchoolPaystackSubaccount(
+            schoolId,
+            {
+              settlementBankCode:
+                updatedData.settlementBankCode!,
+              settlementAccountNumber:
+                updatedData.settlementAccountNumber!,
+            }
+          );
+
+        updatedData.paystackSubaccountCode =
+          subaccount.subaccount_code;
+
+        updatedData.paystackAccountName =
+          subaccount.account_name;
+
+        if (
+          !data.settlementBankName
+        ) {
+          updatedData.settlementBankName =
+            subaccount.settlement_bank;
+        }
+      }
     }
 
     existingConfig.paystackSubaccountCode =

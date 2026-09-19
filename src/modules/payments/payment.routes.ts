@@ -4,6 +4,7 @@ import {
   createPaymentController,
   getPaymentController,
   getPaymentsController,
+  initializePaystackPaymentController,
 } from './payment.controller';
 
 import { authenticate } from '../../middleware/auth.middleware';
@@ -13,6 +14,12 @@ import { UserRole } from '../users/user.model';
 const router = Router();
 
 router.use(authenticate);
+
+router.post(
+  '/paystack/initialize',
+  requireRole(UserRole.PARENT),
+  initializePaystackPaymentController
+);
 
 router.post(
   '/',

@@ -16,3 +16,8 @@ export interface PaymentQueryInput {
   paymentMethod?: PaymentMethod;
   status?: PaymentStatus;
 }
+
+export interface InitializePaystackPaymentInput {
+  invoiceId: string;
+  amount: number;
+}

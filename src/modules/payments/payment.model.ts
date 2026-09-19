@@ -27,6 +27,9 @@ export interface IPayment extends Document {
   paymentMethod: PaymentMethod;
   status: PaymentStatus;
   reference?: string;
+  platformFeePercentage?: number;
+  platformFeeAmount?: number;
+  schoolAmount?: number;
   paidAt?: Date;
   metadata?: Record<string, unknown>;
   createdAt: Date;
@@ -75,6 +78,19 @@ const paymentSchema =
         type: String,
         trim: true,
         maxlength: 150,
+      },
+      platformFeePercentage: {
+        type: Number,
+        min: 0,
+        max: 100,
+      },
+      platformFeeAmount: {
+        type: Number,
+        min: 0,
+      },
+      schoolAmount: {
+        type: Number,
+        min: 0,
       },
       paidAt: {
         type: Date,
