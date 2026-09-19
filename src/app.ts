@@ -17,6 +17,9 @@ import attendanceRoutes from './modules/attendance/attendance.routes';
 import resultRoutes from './modules/results/result.routes';
 import parentRoutes from './modules/parents/parent.routes';
 import parentStudentRoutes from './modules/ParentStudent/parentstudent.routes';
+import feeCategoryRoutes from './modules/fee-categories/fee-category.routes';
+import feeStructureRoutes from './modules/fee-structures/fee-structure.routes';
+import invoiceRoutes from './modules/invoices/invoice.routes';
 
 
 const app = express();
@@ -65,4 +68,7 @@ app.use('/api/v1/attendance', attendanceRoutes);
 app.use('/api/v1/results', resultRoutes);
 app.use('/api/v1/parents', parentRoutes);
 app.use('/api/v1/parent-students', parentStudentRoutes);
+app.use('/api/v1/fee-categories', feeCategoryRoutes);
+app.use('/api/v1/fee-structures', feeStructureRoutes);
+app.use('/api/v1/invoices', invoiceRoutes);
 export default app;
