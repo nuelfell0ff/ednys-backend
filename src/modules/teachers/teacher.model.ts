@@ -72,6 +72,7 @@ const teacherSchema = new Schema<ITeacher>(
   }
 );
 
+
 teacherSchema.index(
   {
     schoolId: 1,
@@ -81,6 +82,7 @@ teacherSchema.index(
     unique: true,
   }
 );
+
 
 teacherSchema.index(
   {

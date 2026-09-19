@@ -9,9 +9,15 @@ const objectIdSchema = z
 
 const dateStringSchema = z
   .string()
-  .datetime({
-    message: 'Must be a valid date and time',
-  });
+  .refine(
+    (value) => {
+      const date = new Date(value);
+      return !Number.isNaN(date.getTime());
+    },
+    {
+      message: 'Must be a valid date',
+    }
+  );
 
 export const createTeacherSchema = z.object({
   userId: objectIdSchema,
@@ -52,8 +58,7 @@ export const createTeacherSchema = z.object({
     )
     .optional(),
 
-  dateOfEmployment:
-    dateStringSchema.optional(),
+  dateOfEmployment: dateStringSchema.optional(),
 });
 
 export const updateTeacherSchema = z
@@ -94,8 +99,7 @@ export const updateTeacherSchema = z
       )
       .optional(),
 
-    dateOfEmployment:
-      dateStringSchema.optional(),
+    dateOfEmployment: dateStringSchema.optional(),
 
     isActive: z
       .boolean()

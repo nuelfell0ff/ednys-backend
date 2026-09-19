@@ -1,6 +1,11 @@
 import { Types } from 'mongoose';
 
-import { Result, ResultStatus } from './result.model';
+import {
+  Result,
+  ResultStatus,
+  ResultTerm,
+} from './result.model';
+
 import {
   BulkCreateResultInput,
   CreateResultInput,
@@ -809,7 +814,9 @@ export const getChildResultsForParent =
   async (
     schoolId: string,
     userId: string,
-    studentId: string
+    studentId: string,
+    academicSessionId?: string,
+    term?: ResultTerm
   ) => {
     validateSchoolId(schoolId);
 
@@ -822,6 +829,24 @@ export const getChildResultsForParent =
       studentId,
       'Invalid student ID'
     );
+
+    if (academicSessionId) {
+      validateObjectId(
+        academicSessionId,
+        'Invalid academic session ID'
+      );
+    }
+
+    if (
+      term &&
+      !Object.values(ResultTerm).includes(
+        term
+      )
+    ) {
+      throw new Error(
+        'Invalid term'
+      );
+    }
 
     const parent =
       await Parent.findOne({
@@ -850,13 +875,29 @@ export const getChildResultsForParent =
       );
     }
 
+    const resultQuery: {
+      schoolId: string;
+      studentId: string;
+      status: ResultStatus;
+      academicSessionId?: string;
+      term?: ResultTerm;
+    } = {
+      schoolId,
+      studentId,
+      status: ResultStatus.PUBLISHED,
+    };
+
+    if (academicSessionId) {
+      resultQuery.academicSessionId =
+        academicSessionId;
+    }
+
+    if (term) {
+      resultQuery.term = term;
+    }
+
     const results =
-      await Result.find({
-        schoolId,
-        studentId,
-        status:
-          ResultStatus.PUBLISHED,
-      })
+      await Result.find(resultQuery)
         .populate({
           path: 'studentId',
           select:

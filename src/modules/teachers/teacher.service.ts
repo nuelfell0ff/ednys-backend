@@ -24,6 +24,14 @@ const validateUserId = (
   }
 };
 
+const normalizeOptionalString = (
+  value?: string
+): string | undefined => {
+  const normalized = value?.trim();
+
+  return normalized || undefined;
+};
+
 export const createTeacher = async (
   schoolId: string,
   data: CreateTeacherInput
@@ -56,12 +64,16 @@ export const createTeacher = async (
     );
   }
 
-  if (data.employeeNumber) {
+  const employeeNumber =
+    normalizeOptionalString(
+      data.employeeNumber
+    )?.toUpperCase();
+
+  if (employeeNumber) {
     const existingEmployee =
       await Teacher.findOne({
         schoolId,
-        employeeNumber:
-          data.employeeNumber.trim().toUpperCase(),
+        employeeNumber,
       });
 
     if (existingEmployee) {
@@ -74,16 +86,21 @@ export const createTeacher = async (
   const teacher = await Teacher.create({
     schoolId: new Types.ObjectId(schoolId),
     userId: new Types.ObjectId(data.userId),
-    employeeNumber:
-      data.employeeNumber
-        ?.trim()
-        .toUpperCase(),
+    employeeNumber,
     qualification:
-      data.qualification?.trim(),
-    phone: data.phone?.trim(),
-    address: data.address?.trim(),
+      normalizeOptionalString(
+        data.qualification
+      ),
+    phone: normalizeOptionalString(
+      data.phone
+    ),
+    address: normalizeOptionalString(
+      data.address
+    ),
     dateOfEmployment:
-      data.dateOfEmployment,
+      data.dateOfEmployment
+        ? new Date(data.dateOfEmployment)
+        : undefined,
   });
 
   return teacher;
@@ -155,10 +172,17 @@ export const updateTeacher = async (
     throw new Error('Teacher not found');
   }
 
-  if (data.employeeNumber !== undefined) {
-    const employeeNumber =
-      data.employeeNumber.trim().toUpperCase();
+  const employeeNumber =
+    data.employeeNumber !== undefined
+      ? normalizeOptionalString(
+          data.employeeNumber
+        )?.toUpperCase()
+      : undefined;
 
+  if (
+    data.employeeNumber !== undefined &&
+    employeeNumber
+  ) {
     const duplicateTeacher =
       await Teacher.findOne({
         schoolId,
@@ -177,28 +201,31 @@ export const updateTeacher = async (
 
   const updateData = {
     ...(data.employeeNumber !== undefined && {
-      employeeNumber:
-        data.employeeNumber
-          .trim()
-          .toUpperCase(),
+      employeeNumber,
     }),
 
     ...(data.qualification !== undefined && {
       qualification:
-        data.qualification.trim(),
+        normalizeOptionalString(
+          data.qualification
+        ),
     }),
 
     ...(data.phone !== undefined && {
-      phone: data.phone.trim(),
+      phone: normalizeOptionalString(
+        data.phone
+      ),
     }),
 
     ...(data.address !== undefined && {
-      address: data.address.trim(),
+      address: normalizeOptionalString(
+        data.address
+      ),
     }),
 
     ...(data.dateOfEmployment !== undefined && {
       dateOfEmployment:
-        data.dateOfEmployment,
+        new Date(data.dateOfEmployment),
     }),
 
     ...(data.isActive !== undefined && {

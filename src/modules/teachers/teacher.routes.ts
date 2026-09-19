@@ -24,11 +24,13 @@ router.post(
 
 router.get(
   '/',
+  requireRole(UserRole.ADMIN),
   getTeachersController
 );
 
 router.get(
   '/:id',
+  requireRole(UserRole.ADMIN),
   getTeacherController
 );
 

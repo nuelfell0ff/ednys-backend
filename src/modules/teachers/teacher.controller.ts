@@ -167,12 +167,18 @@ export const getTeacherController =
         data: teacher,
       });
     } catch (error) {
-      res.status(404).json({
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'Failed to retrieve teacher';
+
+      res.status(
+        message === 'Teacher not found'
+          ? 404
+          : 400
+      ).json({
         success: false,
-        message:
-          error instanceof Error
-            ? error.message
-            : 'Teacher not found',
+        message,
       });
     }
   };
@@ -234,12 +240,18 @@ export const updateTeacherController =
         data: teacher,
       });
     } catch (error) {
-      res.status(400).json({
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'Failed to update teacher';
+
+      res.status(
+        message === 'Teacher not found'
+          ? 404
+          : 400
+      ).json({
         success: false,
-        message:
-          error instanceof Error
-            ? error.message
-            : 'Failed to update teacher',
+        message,
       });
     }
   };
@@ -280,16 +292,22 @@ export const deleteTeacherController =
       res.status(200).json({
         success: true,
         message:
-          'Teacher deleted successfully',
+          'Teacher deactivated successfully',
         data: teacher,
       });
     } catch (error) {
-      res.status(404).json({
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'Failed to deactivate teacher';
+
+      res.status(
+        message === 'Teacher not found'
+          ? 404
+          : 400
+      ).json({
         success: false,
-        message:
-          error instanceof Error
-            ? error.message
-            : 'Teacher not found',
+        message,
       });
     }
   };
