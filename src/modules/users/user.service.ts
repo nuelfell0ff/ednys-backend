@@ -1,7 +1,7 @@
 import bcrypt from 'bcryptjs';
 import { Types } from 'mongoose';
 
-import { User } from './user.model';
+import { User, UserRole } from './user.model';
 import {
   CreateUserInput,
   UpdateUserInput,
@@ -11,7 +11,7 @@ export interface CreateUserData {
   name: string;
   email: string;
   password: string;
-  role: CreateUserInput['role'];
+  role: UserRole;
 }
 
 export const createUser = async (
@@ -20,6 +20,12 @@ export const createUser = async (
 ) => {
   if (!Types.ObjectId.isValid(schoolId)) {
     throw new Error('Invalid school ID');
+  }
+
+  if (data.role === UserRole.SUPER_ADMIN) {
+    throw new Error(
+      'SUPER_ADMIN cannot be created through the school user service'
+    );
   }
 
   const email = data.email
@@ -86,7 +92,7 @@ export const getUserByEmail = async (
   }
 
   const user = await User.findOne({
-    email: email.toLowerCase(),
+    email: email.toLowerCase().trim(),
     schoolId,
   }).select('+passwordHash');
 
@@ -104,6 +110,12 @@ export const updateUser = async (
 
   if (!Types.ObjectId.isValid(schoolId)) {
     throw new Error('Invalid school ID');
+  }
+
+  if (data.role === UserRole.SUPER_ADMIN) {
+    throw new Error(
+      'A school user cannot be promoted to SUPER_ADMIN'
+    );
   }
 
   const updateData = {

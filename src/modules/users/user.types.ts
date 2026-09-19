@@ -3,9 +3,9 @@ import { UserRole } from './user.model';
 export interface CreateUserInput {
   name: string;
   email: string;
-  passwordHash: string;
+  password: string;
   role: UserRole;
-  schoolId: string;
+  schoolId?: string;
 }
 
 export interface UpdateUserInput {

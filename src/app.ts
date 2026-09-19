@@ -21,6 +21,7 @@ import feeCategoryRoutes from './modules/fee-categories/fee-category.routes';
 import feeStructureRoutes from './modules/fee-structures/fee-structure.routes';
 import invoiceRoutes from './modules/invoices/invoice.routes';
 import paymentRoutes from './modules/payments/payment.routes';
+import schoolPaymentConfigRoutes from './modules/school-payment-config/school-payment-config.routes';
 
 
 const app = express();
@@ -73,4 +74,5 @@ app.use('/api/v1/fee-categories', feeCategoryRoutes);
 app.use('/api/v1/fee-structures', feeStructureRoutes);
 app.use('/api/v1/invoices', invoiceRoutes);
 app.use('/api/v1/payments', paymentRoutes);
+app.use('/api/v1/school-payment-config', schoolPaymentConfigRoutes);
 export default app;

@@ -2,7 +2,10 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
 import { School } from '../schools/school.model';
-import { User, UserRole } from '../users/user.model';
+import {
+  User,
+  UserRole,
+} from '../users/user.model';
 
 import {
   LoginInput,
@@ -15,9 +18,9 @@ interface AuthResult {
     name: string;
     email: string;
     role: UserRole;
-    schoolId: string;
+    schoolId?: string;
   };
-  school: {
+  school?: {
     id: string;
     name: string;
     slug: string;
@@ -25,7 +28,9 @@ interface AuthResult {
   accessToken: string;
 }
 
-const generateSchoolSlug = (schoolName: string): string => {
+const generateSchoolSlug = (
+  schoolName: string
+): string => {
   return schoolName
     .toLowerCase()
     .trim()
@@ -36,7 +41,8 @@ const generateSchoolSlug = (schoolName: string): string => {
 const generateUniqueSchoolSlug = async (
   schoolName: string
 ): Promise<string> => {
-  const baseSlug = generateSchoolSlug(schoolName);
+  const baseSlug =
+    generateSchoolSlug(schoolName);
 
   let slug = baseSlug;
   let counter = 1;
@@ -51,24 +57,38 @@ const generateUniqueSchoolSlug = async (
 
 const generateAccessToken = (
   userId: string,
-  schoolId: string,
-  role: UserRole
+  role: UserRole,
+  schoolId?: string
 ): string => {
-  const secret = process.env.JWT_ACCESS_SECRET;
+  const secret =
+    process.env.JWT_ACCESS_SECRET;
 
   if (!secret) {
-    throw new Error('JWT_ACCESS_SECRET is not defined');
+    throw new Error(
+      'JWT_ACCESS_SECRET is not defined'
+    );
+  }
+
+  const payload: {
+    userId: string;
+    role: UserRole;
+    schoolId?: string;
+  } = {
+    userId,
+    role,
+  };
+
+  if (schoolId) {
+    payload.schoolId = schoolId;
   }
 
   return jwt.sign(
-    {
-      userId,
-      schoolId,
-      role,
-    },
+    payload,
     secret,
     {
-      expiresIn: process.env.JWT_ACCESS_EXPIRES_IN || '15m',
+      expiresIn:
+        process.env.JWT_ACCESS_EXPIRES_IN ||
+        '15m',
     } as jwt.SignOptions
   );
 };
@@ -76,11 +96,15 @@ const generateAccessToken = (
 export const registerSchoolAdmin = async (
   data: RegisterInput
 ): Promise<AuthResult> => {
-  const adminEmail = data.adminEmail.toLowerCase().trim();
+  const adminEmail =
+    data.adminEmail
+      .toLowerCase()
+      .trim();
 
-  const existingUser = await User.findOne({
-    email: adminEmail,
-  });
+  const existingUser =
+    await User.findOne({
+      email: adminEmail,
+    });
 
   if (existingUser) {
     throw new Error(
@@ -88,14 +112,16 @@ export const registerSchoolAdmin = async (
     );
   }
 
-  const slug = await generateUniqueSchoolSlug(
-    data.schoolName
-  );
+  const slug =
+    await generateUniqueSchoolSlug(
+      data.schoolName
+    );
 
-  const passwordHash = await bcrypt.hash(
-    data.adminPassword,
-    12
-  );
+  const passwordHash =
+    await bcrypt.hash(
+      data.adminPassword,
+      12
+    );
 
   const school = await School.create({
     name: data.schoolName,
@@ -117,11 +143,12 @@ export const registerSchoolAdmin = async (
       schoolId: school._id,
     });
 
-    const accessToken = generateAccessToken(
-      admin._id.toString(),
-      school._id.toString(),
-      admin.role
-    );
+    const accessToken =
+      generateAccessToken(
+        admin._id.toString(),
+        admin.role,
+        school._id.toString()
+      );
 
     return {
       user: {
@@ -129,7 +156,8 @@ export const registerSchoolAdmin = async (
         name: admin.name,
         email: admin.email,
         role: admin.role,
-        schoolId: school._id.toString(),
+        schoolId:
+          school._id.toString(),
       },
       school: {
         id: school._id.toString(),
@@ -139,7 +167,9 @@ export const registerSchoolAdmin = async (
       accessToken,
     };
   } catch (error) {
-    await School.findByIdAndDelete(school._id);
+    await School.findByIdAndDelete(
+      school._id
+    );
 
     throw error;
   }
@@ -148,30 +178,71 @@ export const registerSchoolAdmin = async (
 export const loginUser = async (
   data: LoginInput
 ): Promise<AuthResult> => {
-  const email = data.email.toLowerCase().trim();
+  const email =
+    data.email.toLowerCase().trim();
 
-  const user = await User.findOne({
-    email,
-    isActive: true,
-  }).select('+passwordHash');
+  const user =
+    await User.findOne({
+      email,
+      isActive: true,
+    }).select('+passwordHash');
 
   if (!user) {
-    throw new Error('Invalid email or password');
+    throw new Error(
+      'Invalid email or password'
+    );
   }
 
-  const passwordMatches = await bcrypt.compare(
-    data.password,
-    user.passwordHash
-  );
+  const passwordMatches =
+    await bcrypt.compare(
+      data.password,
+      user.passwordHash
+    );
 
   if (!passwordMatches) {
-    throw new Error('Invalid email or password');
+    throw new Error(
+      'Invalid email or password'
+    );
   }
 
-  const school = await School.findOne({
-    _id: user.schoolId,
-    isActive: true,
-  });
+  if (
+    user.role ===
+    UserRole.SUPER_ADMIN
+  ) {
+    if (user.schoolId) {
+      throw new Error(
+        'Super Admin account configuration is invalid'
+      );
+    }
+
+    const accessToken =
+      generateAccessToken(
+        user._id.toString(),
+        user.role
+      );
+
+    return {
+      user: {
+        id: user._id.toString(),
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
+      accessToken,
+    };
+  }
+
+  if (!user.schoolId) {
+    throw new Error(
+      'User account configuration is invalid'
+    );
+  }
+
+  const school =
+    await School.findOne({
+      _id: user.schoolId,
+      isActive: true,
+    });
 
   if (!school) {
     throw new Error(
@@ -179,11 +250,12 @@ export const loginUser = async (
     );
   }
 
-  const accessToken = generateAccessToken(
-    user._id.toString(),
-    school._id.toString(),
-    user.role
-  );
+  const accessToken =
+    generateAccessToken(
+      user._id.toString(),
+      user.role,
+      school._id.toString()
+    );
 
   return {
     user: {
@@ -191,7 +263,8 @@ export const loginUser = async (
       name: user.name,
       email: user.email,
       role: user.role,
-      schoolId: school._id.toString(),
+      schoolId:
+        school._id.toString(),
     },
     school: {
       id: school._id.toString(),

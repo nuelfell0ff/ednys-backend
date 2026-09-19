@@ -1,6 +1,11 @@
-import mongoose, { Document, Schema, Types } from 'mongoose';
+import mongoose, {
+  Document,
+  Schema,
+  Types,
+} from 'mongoose';
 
 export enum UserRole {
+  SUPER_ADMIN = 'SUPER_ADMIN',
   ADMIN = 'ADMIN',
   TEACHER = 'TEACHER',
   PARENT = 'PARENT',
@@ -11,7 +16,7 @@ export interface IUser extends Document {
   email: string;
   passwordHash: string;
   role: UserRole;
-  schoolId: Types.ObjectId;
+  schoolId?: Types.ObjectId;
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -48,7 +53,9 @@ const userSchema = new Schema<IUser>(
     schoolId: {
       type: Schema.Types.ObjectId,
       ref: 'School',
-      required: true,
+      required: function (this: IUser) {
+        return this.role !== UserRole.SUPER_ADMIN;
+      },
       index: true,
     },
 
@@ -67,4 +74,7 @@ userSchema.index(
   { unique: true }
 );
 
-export const User = mongoose.model<IUser>('User', userSchema);
+export const User = mongoose.model<IUser>(
+  'User',
+  userSchema
+);
