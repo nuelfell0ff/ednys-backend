@@ -21,6 +21,28 @@ export interface InitializePaystackTransactionResponse {
   };
 }
 
+export interface VerifyPaystackTransactionResponse {
+  status: boolean;
+  message: string;
+  data: {
+    id: number;
+    domain: string;
+    status: string;
+    reference: string;
+    amount: number;
+    currency: string;
+    transaction_date: string;
+    paid_at?: string;
+    channel?: string;
+    gateway_response?: string;
+    metadata?: Record<string, unknown> | string | null;
+    subaccount?: {
+      subaccount_code?: string;
+      business_name?: string;
+    } | null;
+  };
+}
+
 export const verifyPaystackConnection =
   async (): Promise<void> => {
     await paystackClient.get('/balance');
@@ -70,6 +92,26 @@ export const initializePaystackTransaction =
           metadata: data.metadata,
           currency: 'NGN',
         }
+      );
+
+    return response.data;
+  };
+
+export const verifyPaystackTransaction =
+  async (
+    reference: string
+  ): Promise<VerifyPaystackTransactionResponse> => {
+    if (!reference?.trim()) {
+      throw new Error(
+        'Transaction reference is required'
+      );
+    }
+
+    const response =
+      await paystackClient.get<VerifyPaystackTransactionResponse>(
+        `/transaction/verify/${encodeURIComponent(
+          reference.trim()
+        )}`
       );
 
     return response.data;

@@ -23,7 +23,9 @@ import invoiceRoutes from './modules/invoices/invoice.routes';
 import paymentRoutes from './modules/payments/payment.routes';
 import schoolPaymentConfigRoutes from './modules/school-payment-config/school-payment-config.routes';
 import platformPaymentConfigRoutes from './modules/platform-payment-config/platform-payment-config.routes';
-
+import {
+  paystackWebhookController,
+} from './modules/payments/paystack-webhook.controller';
 
 const app = express();
 
@@ -31,7 +33,9 @@ app.use(helmet());
 
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+    origin:
+      process.env.CORS_ORIGIN ||
+      'http://localhost:3000',
     credentials: true,
   })
 );
@@ -45,36 +49,138 @@ app.use(
   })
 );
 
-app.use(express.json({ limit: '1mb' }));
-app.use(express.urlencoded({ extended: true }));
+app.post(
+  '/api/v1/payments/paystack/webhook',
+  express.raw({
+    type: 'application/json',
+    limit: '1mb',
+  }),
+  paystackWebhookController
+);
 
-app.get('/api/v1/health', (_req, res) => {
-  res.status(200).json({
-    success: true,
-    message: 'EDNYS API is running',
-    environment: process.env.NODE_ENV || 'development',
-  });
-});
+app.use(
+  express.json({
+    limit: '1mb',
+  })
+);
 
+app.use(
+  express.urlencoded({
+    extended: true,
+  })
+);
 
-app.use('/api/v1/schools', schoolRoutes);
-app.use('/api/v1/auth', authRoutes);
-app.use('/api/v1/students', studentRoutes);
-app.use('/api/v1/academic-sessions', academicSessionRoutes);
-app.use('/api/v1/classes', classRoutes);
-app.use('/api/v1/subjects', subjectRoutes);
-app.use('/api/v1/teachers', teacherRoutes);
-app.use('/api/v1/users', userRoutes);
-app.use('/api/v1/teacher-assignments', teacherAssignmentRoutes);
-app.use('/api/v1/assignments', assignmentRoutes);
-app.use('/api/v1/attendance', attendanceRoutes);
-app.use('/api/v1/results', resultRoutes);
-app.use('/api/v1/parents', parentRoutes);
-app.use('/api/v1/parent-students', parentStudentRoutes);
-app.use('/api/v1/fee-categories', feeCategoryRoutes);
-app.use('/api/v1/fee-structures', feeStructureRoutes);
-app.use('/api/v1/invoices', invoiceRoutes);
-app.use('/api/v1/payments', paymentRoutes);
-app.use('/api/v1/school-payment-config', schoolPaymentConfigRoutes);
-app.use('/api/v1/platform-payment-config', platformPaymentConfigRoutes);
+app.get(
+  '/api/v1/health',
+  (_req, res) => {
+    res.status(200).json({
+      success: true,
+      message: 'EDNYS API is running',
+      environment:
+        process.env.NODE_ENV ||
+        'development',
+    });
+  }
+);
+
+app.use(
+  '/api/v1/schools',
+  schoolRoutes
+);
+
+app.use(
+  '/api/v1/auth',
+  authRoutes
+);
+
+app.use(
+  '/api/v1/students',
+  studentRoutes
+);
+
+app.use(
+  '/api/v1/academic-sessions',
+  academicSessionRoutes
+);
+
+app.use(
+  '/api/v1/classes',
+  classRoutes
+);
+
+app.use(
+  '/api/v1/subjects',
+  subjectRoutes
+);
+
+app.use(
+  '/api/v1/teachers',
+  teacherRoutes
+);
+
+app.use(
+  '/api/v1/users',
+  userRoutes
+);
+
+app.use(
+  '/api/v1/teacher-assignments',
+  teacherAssignmentRoutes
+);
+
+app.use(
+  '/api/v1/assignments',
+  assignmentRoutes
+);
+
+app.use(
+  '/api/v1/attendance',
+  attendanceRoutes
+);
+
+app.use(
+  '/api/v1/results',
+  resultRoutes
+);
+
+app.use(
+  '/api/v1/parents',
+  parentRoutes
+);
+
+app.use(
+  '/api/v1/parent-students',
+  parentStudentRoutes
+);
+
+app.use(
+  '/api/v1/fee-categories',
+  feeCategoryRoutes
+);
+
+app.use(
+  '/api/v1/fee-structures',
+  feeStructureRoutes
+);
+
+app.use(
+  '/api/v1/invoices',
+  invoiceRoutes
+);
+
+app.use(
+  '/api/v1/payments',
+  paymentRoutes
+);
+
+app.use(
+  '/api/v1/school-payment-config',
+  schoolPaymentConfigRoutes
+);
+
+app.use(
+  '/api/v1/platform-payment-config',
+  platformPaymentConfigRoutes
+);
+
 export default app;
