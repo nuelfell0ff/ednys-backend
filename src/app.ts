@@ -20,6 +20,7 @@ import parentStudentRoutes from './modules/ParentStudent/parentstudent.routes';
 import feeCategoryRoutes from './modules/fee-categories/fee-category.routes';
 import feeStructureRoutes from './modules/fee-structures/fee-structure.routes';
 import invoiceRoutes from './modules/invoices/invoice.routes';
+import paymentRoutes from './modules/payments/payment.routes';
 
 
 const app = express();
@@ -71,4 +72,5 @@ app.use('/api/v1/parent-students', parentStudentRoutes);
 app.use('/api/v1/fee-categories', feeCategoryRoutes);
 app.use('/api/v1/fee-structures', feeStructureRoutes);
 app.use('/api/v1/invoices', invoiceRoutes);
+app.use('/api/v1/payments', paymentRoutes);
 export default app;
