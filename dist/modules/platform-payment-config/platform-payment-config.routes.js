@@ -1,0 +1,14 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const platform_payment_config_controller_1 = require("./platform-payment-config.controller");
+const auth_middleware_1 = require("../../middleware/auth.middleware");
+const role_middleware_1 = require("../../middleware/role.middleware");
+const user_model_1 = require("../users/user.model");
+const router = (0, express_1.Router)();
+router.use(auth_middleware_1.authenticate);
+router.post('/', (0, role_middleware_1.requireRole)(user_model_1.UserRole.SUPER_ADMIN), platform_payment_config_controller_1.createPlatformPaymentConfigController);
+router.get('/', (0, role_middleware_1.requireRole)(user_model_1.UserRole.SUPER_ADMIN), platform_payment_config_controller_1.getPlatformPaymentConfigController);
+router.patch('/', (0, role_middleware_1.requireRole)(user_model_1.UserRole.SUPER_ADMIN), platform_payment_config_controller_1.updatePlatformPaymentConfigController);
+router.patch('/disable', (0, role_middleware_1.requireRole)(user_model_1.UserRole.SUPER_ADMIN), platform_payment_config_controller_1.disablePlatformPaymentConfigController);
+exports.default = router;

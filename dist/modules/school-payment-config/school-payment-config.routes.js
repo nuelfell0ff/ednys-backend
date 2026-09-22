@@ -1,0 +1,14 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const school_payment_config_controller_1 = require("./school-payment-config.controller");
+const auth_middleware_1 = require("../../middleware/auth.middleware");
+const role_middleware_1 = require("../../middleware/role.middleware");
+const user_model_1 = require("../users/user.model");
+const router = (0, express_1.Router)();
+router.use(auth_middleware_1.authenticate);
+router.post('/', (0, role_middleware_1.requireRole)(user_model_1.UserRole.ADMIN), school_payment_config_controller_1.createSchoolPaymentConfigController);
+router.get('/', (0, role_middleware_1.requireRole)(user_model_1.UserRole.ADMIN), school_payment_config_controller_1.getSchoolPaymentConfigController);
+router.patch('/', (0, role_middleware_1.requireRole)(user_model_1.UserRole.ADMIN), school_payment_config_controller_1.updateSchoolPaymentConfigController);
+router.patch('/disable', (0, role_middleware_1.requireRole)(user_model_1.UserRole.ADMIN), school_payment_config_controller_1.disableSchoolPaymentConfigController);
+exports.default = router;

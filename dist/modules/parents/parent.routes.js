@@ -1,0 +1,17 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const parent_controller_1 = require("./parent.controller");
+const auth_middleware_1 = require("../../middleware/auth.middleware");
+const role_middleware_1 = require("../../middleware/role.middleware");
+const user_model_1 = require("../users/user.model");
+const router = (0, express_1.Router)();
+router.use(auth_middleware_1.authenticate);
+router.post('/', (0, role_middleware_1.requireRole)(user_model_1.UserRole.ADMIN), parent_controller_1.createParentController);
+router.get('/my', (0, role_middleware_1.requireRole)(user_model_1.UserRole.PARENT), parent_controller_1.getMyParentProfileController);
+router.get('/dashboard', (0, role_middleware_1.requireRole)(user_model_1.UserRole.PARENT), parent_controller_1.getMyParentDashboardController);
+router.get('/', (0, role_middleware_1.requireRole)(user_model_1.UserRole.ADMIN), parent_controller_1.getParentsController);
+router.get('/user/:userId', (0, role_middleware_1.requireRole)(user_model_1.UserRole.ADMIN), parent_controller_1.getParentByUserController);
+router.get('/:id', (0, role_middleware_1.requireRole)(user_model_1.UserRole.ADMIN), parent_controller_1.getParentController);
+router.patch('/:id', (0, role_middleware_1.requireRole)(user_model_1.UserRole.ADMIN), parent_controller_1.updateParentController);
+exports.default = router;
