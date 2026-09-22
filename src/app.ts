@@ -3,6 +3,14 @@ import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 
+import {
+  authenticate,
+} from './middleware/auth.middleware';
+
+import {
+  tenantMiddleware,
+} from './middleware/tenant.middleware';
+
 import schoolRoutes from './modules/schools/school.routes';
 import authRoutes from './modules/auth/auth.routes';
 import studentRoutes from './modules/students/student.routes';
@@ -23,6 +31,7 @@ import invoiceRoutes from './modules/invoices/invoice.routes';
 import paymentRoutes from './modules/payments/payment.routes';
 import schoolPaymentConfigRoutes from './modules/school-payment-config/school-payment-config.routes';
 import platformPaymentConfigRoutes from './modules/platform-payment-config/platform-payment-config.routes';
+
 import {
   paystackWebhookController,
 } from './modules/payments/paystack-webhook.controller';
@@ -70,6 +79,10 @@ app.use(
   })
 );
 
+app.use(
+  tenantMiddleware
+);
+
 app.get(
   '/api/v1/health',
   (_req, res) => {
@@ -79,6 +92,28 @@ app.get(
       environment:
         process.env.NODE_ENV ||
         'development',
+    });
+  }
+);
+
+app.get(
+  '/api/v1/tenant-test',
+  authenticate,
+  (req, res) => {
+    res.status(200).json({
+      success: true,
+      host: req.headers.host,
+      tenant: req.school
+        ? {
+            id: req.school._id,
+            name: req.school.name,
+            slug: req.school.slug,
+            subdomain:
+              req.school.subdomain,
+            isActive:
+              req.school.isActive,
+          }
+        : null,
     });
   }
 );

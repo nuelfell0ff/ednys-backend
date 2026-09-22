@@ -203,6 +203,20 @@ export const authenticate = async (
       return;
     }
 
+    if (
+      req.school &&
+      req.school._id.toString() !==
+        school._id.toString()
+    ) {
+      res.status(403).json({
+        success: false,
+        message:
+          'You do not have access to this school tenant',
+      });
+
+      return;
+    }
+
     req.user = {
       userId: user._id.toString(),
       schoolId: school._id.toString(),
